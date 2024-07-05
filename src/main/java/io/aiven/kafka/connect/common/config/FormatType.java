@@ -27,7 +27,8 @@ public enum FormatType {
     CSV("csv"),
     JSON("json"),
     JSONL("jsonl"),
-    PARQUET("parquet");
+    PARQUET("parquet"),
+    PARQUET_AYLA_CUSTOM("parquet_ayla_custom");
     public static final String SUPPORTED_FORMAT_TYPES =
             FormatType.names().stream()
                     .map(c -> String.format("'%s'", c))

@@ -32,7 +32,7 @@ plugins {
     id "maven-publish"
 
     // https://docs.gradle.org/current/userguide/signing_plugin.html
-    id "signing"
+    //id "signing"
 }
 
 group = "io.aiven"
@@ -84,7 +84,7 @@ repositories {
 ext {
     kafkaVersion = "1.1.0"
     parquetVersion = "1.11.2"
-    junitVersion = "5.10.3"
+    junitVersion = "5.10.2"
     confluentPlatformVersion = "7.2.2"
     hadoopVersion = "3.4.0"
 }
@@ -160,6 +160,8 @@ dependencies {
         exclude group: "org.apache.hadoop", module: "hadoop-yarn-common"
         exclude group: "com.google.inject.extensions", module: "guice-servlet"
         exclude group: "io.netty", module: "netty"
+        exclude group: "io.netty", module: "netty-handler"
+        exclude group: 'io.netty', module: 'netty-transport-native-epoll'
     }
 
     testImplementation "org.apache.kafka:connect-api:$kafkaVersion"
@@ -175,7 +177,11 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
     testImplementation "org.codehaus.woodstox:stax2-api:4.2.2"
-    testImplementation "org.apache.hadoop:hadoop-mapreduce-client-core:$hadoopVersion"
+    testImplementation ("org.apache.hadoop:hadoop-mapreduce-client-core:$hadoopVersion") {
+        exclude group: "io.netty", module: "netty"
+        exclude group: "io.netty", module: "netty-handler"
+        exclude group: 'io.netty', module: 'netty-transport-native-epoll'
+    }
 
     testImplementation "com.fasterxml.jackson.core:jackson-databind:2.17.0"
     testImplementation "io.confluent:kafka-connect-avro-converter:$confluentPlatformVersion"
@@ -246,10 +252,11 @@ publishing {
 
             credentials(PasswordCredentials)
         }
+        mavenLocal()
     }
 }
 
-signing {
+/*signing {
     sign publishing.publications.maven
     useGpgCmd()
     // Some issue in the plugin:
@@ -268,4 +275,4 @@ signing {
             setDefaultType(binary.getExtension());
         }
     }
-}
+}*/

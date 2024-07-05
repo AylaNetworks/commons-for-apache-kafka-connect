@@ -30,6 +30,7 @@ import org.apache.kafka.connect.sink.SinkRecord;
 
 import io.aiven.kafka.connect.common.config.FilenameTemplateVariable;
 import io.aiven.kafka.connect.common.config.TimestampSource;
+import io.aiven.kafka.connect.common.output.Event;
 import io.aiven.kafka.connect.common.templating.Template;
 import io.aiven.kafka.connect.common.templating.VariableTemplatePart.Parameter;
 
@@ -98,12 +99,27 @@ class TopicPartitionRecordGrouper implements RecordGrouper {
     protected String resolveRecordKeyFor(final SinkRecord record) {
         final TopicPartition tp = new TopicPartition(record.topic(), record.kafkaPartition());
         final SinkRecord currentHeadRecord = currentHeadRecords.computeIfAbsent(tp, ignored -> record);
-        String recordKey = generateRecordKey(tp, currentHeadRecord, record);
+
+        final String pathPrefix = getPathPrefix(record);
+        String recordKey = pathPrefix + generateRecordKey(tp, currentHeadRecord, record);
+
         if (rotator.rotate(fileBuffers.get(recordKey))) {
             // Create new file using this record as the head record.
             recordKey = generateNewRecordKey(record);
         }
         return recordKey;
+    }
+
+    private String getPathPrefix(final SinkRecord sinkRecord) {
+        try {
+            final String value = sinkRecord.value().toString();
+            final Event event = new Event(value);
+            return new StringBuilder().append("date=")
+                    .append(event.getEvent().get("created_at").substring(0, 10))
+                    .append('/').append(event.getEvent().get("oem")).append('/').toString();
+        } catch (final Exception e) {
+            return "";
+        }
     }
 
     private String generateRecordKey(

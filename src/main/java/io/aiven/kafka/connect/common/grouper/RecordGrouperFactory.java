@@ -157,17 +157,19 @@ public final class RecordGrouperFactory {
                     ? config.getMaxRecordsPerFile()
                     : null;
             if (TOPIC_PARTITION_KEY_RECORD.equals(grType)) {
-                return config.getFormatType() == FormatType.PARQUET || config.getFormatType() == FormatType.AVRO
-                    ? new SchemaBasedTopicPartitionKeyRecordGrouper(
-                    fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource())
-                    : new TopicPartitionKeyRecordGrouper(
-                    fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource());
+                return config.getFormatType() == FormatType.PARQUET
+                        || config.getFormatType() == FormatType.PARQUET_AYLA_CUSTOM
+                        ? new SchemaBasedTopicPartitionKeyRecordGrouper(
+                        fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource())
+                        : new TopicPartitionKeyRecordGrouper(
+                        fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource());
             } else {
-                return config.getFormatType() == FormatType.PARQUET || config.getFormatType() == FormatType.AVRO
-                    ? new SchemaBasedTopicPartitionRecordGrouper(
-                    fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource())
-                    : new TopicPartitionRecordGrouper(
-                    fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource());
+                return config.getFormatType() == FormatType.PARQUET
+                        || config.getFormatType() == FormatType.PARQUET_AYLA_CUSTOM
+                        ? new SchemaBasedTopicPartitionRecordGrouper(
+                        fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource())
+                        : new TopicPartitionRecordGrouper(
+                        fileNameTemplate, maxRecordsPerFile, config.getFilenameTimestampSource());
             }
         }
     }

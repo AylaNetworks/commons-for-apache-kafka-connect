@@ -33,6 +33,7 @@ import io.aiven.kafka.connect.common.config.OutputField;
 import io.aiven.kafka.connect.common.output.avro.AvroOutputWriter;
 import io.aiven.kafka.connect.common.output.jsonwriter.JsonLinesOutputWriter;
 import io.aiven.kafka.connect.common.output.jsonwriter.JsonOutputWriter;
+import io.aiven.kafka.connect.common.output.parquet.ParquetOutputEventWriter;
 import io.aiven.kafka.connect.common.output.parquet.ParquetOutputWriter;
 import io.aiven.kafka.connect.common.output.plainwriter.PlainOutputWriter;
 
@@ -163,6 +164,14 @@ public abstract class OutputWriter implements AutoCloseable {
                     //parquet has its own way for compression,
                     // CompressionType passes by to writer and set explicitly to AvroParquetWriter
                     return new ParquetOutputWriter(outputFields, out, externalProperties, envelopeEnabled);
+                case PARQUET_AYLA_CUSTOM:
+                    if (Objects.isNull(externalProperties)) {
+                        externalProperties = Collections.emptyMap();
+                    }
+                    //parquet has its own way for compression,
+                    // CompressionType passes by to writer and set explicitly to AvroParquetWriter
+                    return new ParquetOutputEventWriter(outputFields, out, externalProperties, envelopeEnabled);
+
                 default:
                     throw new ConnectException("Unsupported format type " + formatType);
             }
