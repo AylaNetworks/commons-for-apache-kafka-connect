@@ -18,6 +18,7 @@ package io.aiven.kafka.connect.common.output.parquet;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.Map;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 import io.aiven.kafka.connect.common.config.OutputField;
+import io.aiven.kafka.connect.common.handler.error.KafkaErrorProducer;
 import io.aiven.kafka.connect.common.output.Event;
 import io.aiven.kafka.connect.common.output.OutputStreamWriter;
 import io.aiven.kafka.connect.common.output.OutputWriter;
@@ -63,11 +65,12 @@ public final class ParquetOutputEventWriter extends OutputWriter {
     }
 
     @Override
-    public void writeRecords(final Collection<SinkRecord> sinkRecords) throws IOException {
+    public void writeRecords(final Collection<SinkRecord> sinkRecords) throws JSONException {
         final var parquetConfig = new ParquetConfig(externalConfiguration);
         final var parquetSchema = ReflectData.get().getSchema(Event.class);
         LOGGER.debug("Record schema is: {}", parquetSchema);
 
+        final List<String> erroneousEvents = new ArrayList<>();
         try (final var parquetWriter =
                      AvroParquetWriter.builder(new ParquetOutputFile())
                              .withSchema(parquetSchema)
@@ -79,16 +82,34 @@ public final class ParquetOutputEventWriter extends OutputWriter {
                              .withCompressionCodec(parquetConfig.compressionCodecName())
                              .withPageSize(PAGE_SIZE)
                              .build()) {
-            for (final var record : sinkRecords) {
-                parquetWriter.write(new Event(record.value().toString()));
+            sinkRecords.forEach(sinkRecord -> {
+                try {
+                    parquetWriter.write(new Event(sinkRecord.value().toString()));
+                } catch (final JSONException | IOException ioe) { //Exception while writing to parquet file
+                    LOGGER.error("Caught exception: {}", ioe.getMessage(), ioe);
+                    erroneousEvents.add(sinkRecord.value().toString());
+                }
+            });
+        } catch (final Exception e) { //Exception while creating parquetWriter
+            LOGGER.error("Caught exception: {}", e.getMessage(), e);
+            sinkRecords.forEach(sinkRecord -> erroneousEvents.add(sinkRecord.value().toString()));
+        }
+        if (erroneousEvents.size() > 0) {
+            KafkaErrorProducer kafkaErrorProducer = null;
+            try {
+                kafkaErrorProducer = new KafkaErrorProducer(null);
+                final KafkaErrorProducer finalKafkaErrorProducer = kafkaErrorProducer;
+                erroneousEvents.forEach(value -> finalKafkaErrorProducer.send(null, value));
+            } finally {
+                if (kafkaErrorProducer != null) {
+                    kafkaErrorProducer.close();
+                }
             }
-        } catch (final JSONException e) {
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void writeRecord(final SinkRecord record) throws IOException {
+    public void writeRecord(final SinkRecord record) throws JSONException {
         this.writeRecords(List.of(record));
     }
 

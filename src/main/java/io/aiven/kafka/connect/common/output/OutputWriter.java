@@ -38,6 +38,7 @@ import io.aiven.kafka.connect.common.output.parquet.ParquetOutputWriter;
 import io.aiven.kafka.connect.common.output.plainwriter.PlainOutputWriter;
 
 import com.github.luben.zstd.ZstdOutputStream;
+import org.codehaus.jettison.json.JSONException;
 import org.xerial.snappy.SnappyOutputStream;
 
 public abstract class OutputWriter implements AutoCloseable {
@@ -69,7 +70,7 @@ public abstract class OutputWriter implements AutoCloseable {
         this.isClosed = false;
     }
 
-    public void writeRecords(final Collection<SinkRecord> sinkRecords) throws IOException {
+    public void writeRecords(final Collection<SinkRecord> sinkRecords) throws IOException, JSONException {
         Objects.requireNonNull(sinkRecords, "sinkRecords");
         if (sinkRecords.isEmpty()) {
             return;
@@ -79,7 +80,7 @@ public abstract class OutputWriter implements AutoCloseable {
         }
     }
 
-    public void writeRecord(final SinkRecord record) throws IOException {
+    public void writeRecord(final SinkRecord record) throws IOException, JSONException {
         Objects.requireNonNull(record, "record cannot be null");
         if (!this.isOutputEmpty) {
             writer.writeRecordsSeparator(outputStream);

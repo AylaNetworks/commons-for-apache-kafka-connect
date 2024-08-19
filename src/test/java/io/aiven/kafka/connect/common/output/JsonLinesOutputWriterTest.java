@@ -37,6 +37,7 @@ import io.aiven.kafka.connect.common.config.OutputFieldEncodingType;
 import io.aiven.kafka.connect.common.config.OutputFieldType;
 import io.aiven.kafka.connect.common.output.jsonwriter.JsonLinesOutputWriter;
 
+import org.codehaus.jettison.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +52,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithoutMetadataAndValue() throws IOException {
+    void jsonValueWithoutMetadataAndValue() throws IOException, JSONException {
         sut = new JsonLinesOutputWriter(Collections.emptyList(), byteStream);
 
         final Struct struct1 = new Struct(level1Schema).put("name", "John");
@@ -64,7 +65,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithValue() throws IOException {
+    void jsonValueWithValue() throws IOException, JSONException {
         final List<OutputField> fields = List.of(new OutputField(OutputFieldType.VALUE, noEncoding));
 
         sut = new JsonLinesOutputWriter(fields, byteStream);
@@ -79,7 +80,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithSingleField() throws IOException {
+    void jsonValueWithSingleField() throws IOException, JSONException {
         final List<OutputField> fields = Collections.singletonList(new OutputField(OutputFieldType.VALUE, noEncoding));
         final Struct struct = new Struct(level1Schema).put("name", "John");
         final SinkRecord record = createRecord("key0", level1Schema, struct, 1, 1000L);
@@ -94,7 +95,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithOneFieldAndValue() throws IOException {
+    void jsonValueWithOneFieldAndValue() throws IOException, JSONException {
         final List<OutputField> fields = Arrays.asList(new OutputField(OutputFieldType.VALUE, noEncoding),
                 new OutputField(OutputFieldType.KEY, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
@@ -109,7 +110,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void multiStringJsonValueWithOneFieldAndValue() throws IOException {
+    void multiStringJsonValueWithOneFieldAndValue() throws IOException, JSONException {
         final List<OutputField> fields = Arrays.asList(new OutputField(OutputFieldType.VALUE, noEncoding),
                 new OutputField(OutputFieldType.KEY, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
@@ -126,7 +127,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithAllMetadata() throws IOException {
+    void jsonValueWithAllMetadata() throws IOException, JSONException {
         final List<OutputField> fields = Arrays.asList(new OutputField(OutputFieldType.VALUE, noEncoding),
                 new OutputField(OutputFieldType.KEY, noEncoding),
                 new OutputField(OutputFieldType.OFFSET, noEncoding),
@@ -148,7 +149,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithMultipleHeaders() throws IOException {
+    void jsonValueWithMultipleHeaders() throws IOException, JSONException {
         final List<OutputField> fields = Arrays.asList(new OutputField(OutputFieldType.VALUE, noEncoding),
                 new OutputField(OutputFieldType.HEADERS, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
@@ -167,7 +168,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithMissingValue() throws IOException {
+    void jsonValueWithMissingValue() throws IOException, JSONException {
         final List<OutputField> fields = Collections.singletonList(new OutputField(OutputFieldType.VALUE, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
 
@@ -179,7 +180,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithMissingKey() throws IOException {
+    void jsonValueWithMissingKey() throws IOException, JSONException {
         final List<OutputField> fields = Arrays.asList(new OutputField(OutputFieldType.VALUE, noEncoding),
                 new OutputField(OutputFieldType.KEY, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
@@ -194,7 +195,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithMissingTimestamp() throws IOException {
+    void jsonValueWithMissingTimestamp() throws IOException, JSONException {
         final List<OutputField> fields = Arrays.asList(new OutputField(OutputFieldType.VALUE, noEncoding),
                 new OutputField(OutputFieldType.TIMESTAMP, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
@@ -209,7 +210,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     }
 
     @Test
-    void jsonValueWithMissingHeader() throws IOException {
+    void jsonValueWithMissingHeader() throws IOException, JSONException {
         final List<OutputField> fields = Arrays.asList(new OutputField(OutputFieldType.VALUE, noEncoding),
                 new OutputField(OutputFieldType.HEADERS, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
@@ -225,7 +226,7 @@ class JsonLinesOutputWriterTest extends JsonOutputWriterTestHelper {
     // JsonLinesWriter could generate a valid Json without even calling `writeLastRecord`.
     // Still, it is not recommended to use it that way, because it could change.
     @Test
-    void doNotHaveToFailIfLastRecordIsMissing() throws IOException {
+    void doNotHaveToFailIfLastRecordIsMissing() throws IOException, JSONException {
         final List<OutputField> fields = List.of(new OutputField(OutputFieldType.VALUE, noEncoding));
         sut = new JsonLinesOutputWriter(fields, byteStream);
 

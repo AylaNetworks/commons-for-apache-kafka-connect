@@ -26,6 +26,7 @@ import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jettison.json.JSONException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,7 +54,7 @@ public abstract class JsonOutputWriterTestHelper {
                 TimestampType.CREATE_TIME);
     }
 
-    protected String useWithWrongLastRecord(final List<SinkRecord> records) throws IOException {
+    protected String useWithWrongLastRecord(final List<SinkRecord> records) throws IOException, JSONException {
         for (final SinkRecord record : records) {
             sut.writeRecord(record);
         }
@@ -62,7 +63,8 @@ public abstract class JsonOutputWriterTestHelper {
     }
 
     // It also makes sure that bytes represents a valid JSON
-    protected void assertRecords(final List<SinkRecord> records, final String expected) throws IOException {
+    protected void assertRecords(final List<SinkRecord> records, final String expected)
+            throws IOException, JSONException {
 
         for (final SinkRecord record : records) {
             sut.writeRecord(record);
