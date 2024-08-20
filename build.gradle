@@ -45,6 +45,19 @@ java {
     withSourcesJar()
 }
 
+ext {
+    nexusUrl = System.getenv("NEXUS_URL") == null ? project.property("nexusUrl") : System.getenv("NEXUS_URL")
+    uploadUrl = System.getenv("UPLOAD_URL") == null ? project.property("uploadUrl") : System.getenv("UPLOAD_URL")
+    nexusUsername = System.getenv("NEXUS_USERNAME") == null ? project.property("nexusUsername") : System.getenv("NEXUS_USERNAME")
+    nexusPassword = System.getenv("NEXUS_PASSWORD") == null ? project.property("nexusPassword") : System.getenv("NEXUS_PASSWORD")
+}
+
+if (project.hasProperty('buildVersion')) {
+    version = project.buildVersion
+} else {
+    version = '0.0.1-SNAPSHOT'
+}
+
 compileJava {
     options.compilerArgs = ["-Xlint:all", "-Werror"]
 }
@@ -200,6 +213,20 @@ javadoc {
 }
 
 publishing {
+    repositories {
+        maven {
+            if (project.version.endsWith('-SNAPSHOT')) {
+                url = uri("${uploadUrl}/snapshots")
+            } else {
+                url = uri("${uploadUrl}/releases")
+            }
+            credentials {
+                username "${nexusUsername}"
+                password "${nexusPassword}"
+            }
+        }
+        mavenLocal()
+    }
     publications {
         maven(MavenPublication) {
             groupId = getGroup()
@@ -234,26 +261,12 @@ publishing {
                 }
 
                 scm {
-                    connection = 'scm:git:git://github.com:aiven-open/commons-for-apache-kafka-connect.git'
-                    developerConnection = 'scm:git:ssh://github.com:aiven-open/commons-for-apache-kafka-connect.git'
-                    url = 'https://github.com/aiven-open/commons-for-apache-kafka-connect'
+                    connection = 'scm:git:git://github.com:AylaNetworks/commons-for-apache-kafka-connect.git'
+                    developerConnection = 'scm:git:ssh://github.com:AylaNetworks/commons-for-apache-kafka-connect.git'
+                    url = 'https://github.com/AylaNetworks/commons-for-apache-kafka-connect'
                 }
             }
         }
-    }
-
-    repositories {
-        maven {
-            def releasesRepoUrl = uploadUrl + "/repository/releases"
-            def snapshotsRepoUrl = uploadUrl + "/repository/snapshots"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-
-            credentials {
-                username nexusUsername
-                password nexusPassword
-            }
-        }
-        mavenLocal()
     }
 }
 
