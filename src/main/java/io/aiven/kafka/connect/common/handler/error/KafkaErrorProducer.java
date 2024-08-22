@@ -16,6 +16,8 @@
 
 package io.aiven.kafka.connect.common.handler.error;
 
+import java.util.UUID;
+
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -42,7 +44,10 @@ public class KafkaErrorProducer {
         }));
     }
 
-    public void send(final String key, final String value) {
+    public void send(String key, final String value) {
+        if (key == null) {
+            key = UUID.randomUUID().toString();
+        }
         final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(deadLetterTopic, key, value);
         producer.send(producerRecord, (metadata, exception) -> {
             if (exception != null) {
