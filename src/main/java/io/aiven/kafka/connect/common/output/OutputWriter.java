@@ -33,10 +33,12 @@ import io.aiven.kafka.connect.common.config.OutputField;
 import io.aiven.kafka.connect.common.output.avro.AvroOutputWriter;
 import io.aiven.kafka.connect.common.output.jsonwriter.JsonLinesOutputWriter;
 import io.aiven.kafka.connect.common.output.jsonwriter.JsonOutputWriter;
+import io.aiven.kafka.connect.common.output.parquet.ParquetOutputEventWriter;
 import io.aiven.kafka.connect.common.output.parquet.ParquetOutputWriter;
 import io.aiven.kafka.connect.common.output.plainwriter.PlainOutputWriter;
 
 import com.github.luben.zstd.ZstdOutputStream;
+import org.codehaus.jettison.json.JSONException;
 import org.xerial.snappy.SnappyOutputStream;
 
 public abstract class OutputWriter implements AutoCloseable {
@@ -68,7 +70,7 @@ public abstract class OutputWriter implements AutoCloseable {
         this.isClosed = false;
     }
 
-    public void writeRecords(final Collection<SinkRecord> sinkRecords) throws IOException {
+    public void writeRecords(final Collection<SinkRecord> sinkRecords) throws IOException, JSONException {
         Objects.requireNonNull(sinkRecords, "sinkRecords");
         if (sinkRecords.isEmpty()) {
             return;
@@ -78,7 +80,7 @@ public abstract class OutputWriter implements AutoCloseable {
         }
     }
 
-    public void writeRecord(final SinkRecord record) throws IOException {
+    public void writeRecord(final SinkRecord record) throws IOException, JSONException {
         Objects.requireNonNull(record, "record cannot be null");
         if (!this.isOutputEmpty) {
             writer.writeRecordsSeparator(outputStream);
@@ -163,6 +165,14 @@ public abstract class OutputWriter implements AutoCloseable {
                     //parquet has its own way for compression,
                     // CompressionType passes by to writer and set explicitly to AvroParquetWriter
                     return new ParquetOutputWriter(outputFields, out, externalProperties, envelopeEnabled);
+                case PARQUET_AYLA_CUSTOM:
+                    if (Objects.isNull(externalProperties)) {
+                        externalProperties = Collections.emptyMap();
+                    }
+                    //parquet has its own way for compression,
+                    // CompressionType passes by to writer and set explicitly to AvroParquetWriter
+                    return new ParquetOutputEventWriter(outputFields, out, externalProperties, envelopeEnabled);
+
                 default:
                     throw new ConnectException("Unsupported format type " + formatType);
             }
